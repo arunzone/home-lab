@@ -13,7 +13,11 @@ def generate_pbkdf2_password(password):
     
     dk = hashlib.pbkdf2_hmac('sha512', password.encode(), salt, iterations)
     
-    return f"@ByteArray(sha512:{iterations}:{base64.b64encode(salt + dk).decode()})"
+    # Format: @ByteArray(salt:derived_key) where both are base64 encoded separately
+    salt_b64 = base64.b64encode(salt).decode()
+    dk_b64 = base64.b64encode(dk).decode()
+
+    return f"@ByteArray({salt_b64}:{dk_b64})"
 
 def update_config_file(config_path, new_password):
     """Update WebUI\\Password_PBKDF2 in qBittorrent config file"""
