@@ -1,1 +1,5 @@
 *.log
+media-manager/arr-stack/config/data
+media-manager/arr-stack/config/config/lockfile
+media-manager/arr-stack/config/config/rss/
+media-manager/arr-stack/config/config/watched_folders.json

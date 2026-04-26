@@ -13,52 +13,20 @@ x-common-keys: &common-keys
       - 1.0.0.1
 
 services:
-  radarr:
-    <<: *common-keys
-    image: ghcr.io/hotio/radarr:latest
-    container_name: radarr
-    volumes:
-      - radarr:/config
-      - ${ROOT_DIR}/media/movies:/movies #optional
-      - ${ROOT_DIR}/torrents/movies:/downloads #optional
-    ports:
-      - 7878:7878
-
-  sonarr:
-    <<: *common-keys
-    image: ghcr.io/hotio/sonarr:latest
-    container_name: sonarr
-    volumes:
-      - sonarr:/config
-      - ${ROOT_DIR}/media/tv:/tv #optional
-      - ${ROOT_DIR}/torrents/tv:/downloads #optional
-    ports:
-      - 8989:8989
-
-  prowlarr:
-    <<: *common-keys
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    volumes:
-      - prowlarr:/config
-    ports:
-      - 9696:9696
-
   qbittorrent:
     <<: *common-keys
     image: ghcr.io/hotio/qbittorrent
     container_name: qbittorrent.internal
     environment:
-      - WEBUI_PORT=8080/tcp
       - LIBTORRENT=v1
       # VPN
-      - VPN_ENABLED=true 
-      - VPN_CONF=wg0 
-      - VPN_PROVIDER=generic 
+      - VPN_ENABLED=true
+      - VPN_CONF=wg0
+      - VPN_PROVIDER=generic
       - VPN_LAN_NETWORK=192.168.1.0/24
-      - VPN_AUTO_PORT_FORWARD=false 
+      - VPN_AUTO_PORT_FORWARD=false
     cap_add:
-      - NET_ADMIN  
+      - NET_ADMIN
     volumes:
       - ./config:/config
       - ${ROOT_DIR}/torrents:/data:rw
