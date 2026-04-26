@@ -23,8 +23,8 @@ def update_config_file(config_path, new_password):
         
         # Update the password line
         updated_content = re.sub(
-            r'WebUI\\\\Password_PBKDF2=.*',
-            f'WebUI\\\\Password_PBKDF2={new_password}',
+            r'WebUI\\Password_PBKDF2=.*',
+            f'WebUI\\Password_PBKDF2={new_password}',
             content
         )
         
