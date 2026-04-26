@@ -46,11 +46,19 @@ services:
 
   qbittorrent:
     <<: *common-keys
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
+    image: ghcr.io/hotio/qbittorrent
+    container_name: qbittorrent.internal
     environment:
-      - WEBUI_PORT=8080
-      - TORRENTING_PORT=6881
+      - WEBUI_PORT=8080/tcp
+      - LIBTORRENT=v1
+      # VPN
+      - VPN_ENABLED=true 
+      - VPN_CONF=wg0 
+      - VPN_PROVIDER=generic 
+      - VPN_LAN_NETWORK=192.168.1.0/24
+      - VPN_AUTO_PORT_FORWARD=false 
+    cap_add:
+      - NET_ADMIN  
     volumes:
       - ./config:/config
       - ${ROOT_DIR}/torrents:/data:rw
@@ -58,6 +66,8 @@ services:
       - 8080:8080
       - 6881:6881
       - 6881:6881/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
 
   jellyfin:
     <<: *common-keys
