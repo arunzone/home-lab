@@ -1,3 +1,4 @@
 #!/bin/bash
 
-# setup arr
+# setup password for qBittorrent
+python3 generate_qbittorrent_password.py
