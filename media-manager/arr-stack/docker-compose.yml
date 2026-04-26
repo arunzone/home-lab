@@ -19,8 +19,8 @@ services:
     container_name: radarr
     volumes:
       - radarr:/config
-      - ${MOVIES_DIR}:/movies #optional
-      - ${DOWNLOADS_DIR}:/downloads #optional
+      - ${ROOT_DIR}/media/movies:/movies #optional
+      - ${ROOT_DIR}/torrents/movies:/downloads #optional
     ports:
       - 7878:7878
 
@@ -30,8 +30,8 @@ services:
     container_name: sonarr
     volumes:
       - sonarr:/config
-      - ${TV_DIR}:/tv #optional
-      - ${DOWNLOADS_DIR}:/downloads #optional
+      - ${ROOT_DIR}/media/tv:/tv #optional
+      - ${ROOT_DIR}/torrents/tv:/downloads #optional
     ports:
       - 8989:8989
 
@@ -53,7 +53,7 @@ services:
       - TORRENTING_PORT=6881
     volumes:
       - ./config:/config
-      - ${ROOT_DIR}/data/torrents:/data:rw
+      - ${ROOT_DIR}/torrents:/data:rw
     ports:
       - 8080:8080
       - 6881:6881
@@ -67,8 +67,8 @@ services:
       - JELLYFIN_PublishedServerUrl=http://192.168.0.5 #optional
     volumes:
       - jellyfin:/config
-      - ${TV_DIR}:/data/tvshows
-      - ${MOVIES_DIR}:/data/movies
+      - ${ROOT_DIR}/media/tv:/data/tvshows
+      - ${ROOT_DIR}/media/movies:/data/movies
     ports:
       - 8096:8096
       - 8920:8920 #optional
