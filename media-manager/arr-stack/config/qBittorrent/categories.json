@@ -1,0 +1,14 @@
+{
+    "books": {
+        "save_path": "books"
+    },
+    "movies": {
+        "save_path": "movies"
+    },
+    "music": {
+        "save_path": "music"
+    },
+    "tv": {
+        "save_path": "tv"
+    }
+}
