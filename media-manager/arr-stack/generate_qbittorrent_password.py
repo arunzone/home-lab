@@ -21,12 +21,15 @@ def update_config_file(config_path, new_password):
         with open(config_path, 'r') as f:
             content = f.read()
         
-        # Update the password line
-        updated_content = re.sub(
-            r'WebUI\\Password_PBKDF2=.*',
-            f'WebUI\\Password_PBKDF2={new_password}',
-            content
-        )
+        # Find and replace the password line
+        lines = content.split('\n')
+        updated_lines = []
+        for line in lines:
+            if line.startswith('WebUI\\Password_PBKDF2='):
+                updated_lines.append(f'WebUI\\Password_PBKDF2="{new_password}"')
+            else:
+                updated_lines.append(line)
+        updated_content = '\n'.join(updated_lines)
         
         with open(config_path, 'w') as f:
             f.write(updated_content)
