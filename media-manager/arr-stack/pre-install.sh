@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# setup password for qBittorrent
-python3 generate_qbittorrent_password.py
-
 #Setup Traefik certificates
 mkdir -p traefik/certs
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
