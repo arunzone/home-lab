@@ -11,8 +11,28 @@ x-common-keys: &common-keys
     dns:
       - 1.1.1.1
       - 1.0.0.1
+    networks:
+      - arr_network
 
 services:
+
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8081:8080"   # dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - arr_network
+
   qbittorrent:
     <<: *common-keys
     image: ghcr.io/hotio/qbittorrent
@@ -30,28 +50,29 @@ services:
     volumes:
       - ./config:/config
       - ${ROOT_DIR}/torrents:/data:rw
-    ports:
-      - 8080:8080
-      - 6881:6881
-      - 6881:6881/udp
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.home.arpa`)
+      - traefik.http.routers.qbittorrent.entrypoints=web
+      - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
 
   jellyfin:
     <<: *common-keys
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
     environment:
-      - JELLYFIN_PublishedServerUrl=http://192.168.0.5 #optional
+      - JELLYFIN_PublishedServerUrl=http://jellyfin.home.arpa #optional
     volumes:
       - jellyfin:/config
       - ${ROOT_DIR}/media/tv:/data/tvshows
       - ${ROOT_DIR}/media/movies:/data/movies
-    ports:
-      - 8096:8096
-      - 8920:8920 #optional
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.jellyfin.rule=Host(`jellyfin.home.arpa`)
+      - traefik.http.routers.jellyfin.entrypoints=web
+      - traefik.http.services.jellyfin.loadbalancer.server.port=8096
 
 volumes:
   radarr:
