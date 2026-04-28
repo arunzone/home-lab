@@ -7,7 +7,8 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -subj "/CN=*.home.arpa"
 
 # Setup Traefik dashboard credential
-TRAEFIK_AUTH=$(htpasswd -nb admin "_H5`+=%dW@eK" | sed -e 's/\$/\$\$/g')
+apt update && apt install apache2-utils -y
+TRAEFIK_AUTH=$(htpasswd -nb admin "_H5+=%dW@eK" | sed -e 's/\$/\$\$/g')
 
 # Update TRAEFIK_BASIC_AUTH in .env file
 if grep -q "^TRAEFIK_BASIC_AUTH=" .env; then
