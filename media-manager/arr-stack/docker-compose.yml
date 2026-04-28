@@ -106,6 +106,9 @@ services:
       - jellyfin:/config
       - ${ROOT_DIR}/media/tv:/data/tvshows
       - ${ROOT_DIR}/media/movies:/data/movies
+    ports:
+      - 7359:7359/udp
+      - "8096:8096"
     labels:
       - traefik.enable=true
       - traefik.http.routers.jellyfin.rule=Host(`jellyfin.home.arpa`)
