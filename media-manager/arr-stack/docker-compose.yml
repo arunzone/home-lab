@@ -4,6 +4,9 @@ x-common-keys: &common-keys
     restart: unless-stopped
     logging:
       driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
@@ -18,7 +21,7 @@ services:
 
   traefik:
     <<: *common-keys
-    image: traefik:v3.7
+    image: traefik:v3.6
     container_name: traefik
     security_opt:
       - no-new-privileges:true
@@ -31,7 +34,7 @@ services:
       - "--entrypoints.websecure.http.tls=true"
 
       # Attach the static configuration tls.yaml file that contains the tls configuration settings
-      - "--providers.file.filename=/traefik/dynamic/tls.yaml"
+      - "--providers.file.filename=/dynamic/tls.yaml"
 
       # Providers
       - "--providers.docker=true"
@@ -51,7 +54,7 @@ services:
       - "traefik.enable=true"
 
       # Dashboard router
-      - "traefik.http.routers.dashboard.rule=Host(`dashboard.docker.localhost`)"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.home.arpa`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
@@ -64,8 +67,8 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik_certs:/certs:ro
-      - ./dynamic:/dynamic:ro
+      - ./traefik/certs:/certs:ro
+      - ./traefik/dynamic:/dynamic:ro
 
 
   qbittorrent:
@@ -106,7 +109,8 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.jellyfin.rule=Host(`jellyfin.home.arpa`)
-      - traefik.http.routers.jellyfin.entrypoints=web
+      - traefik.http.routers.jellyfin.entrypoints=websecure
+      - traefik.http.routers.jellyfin.tls=true
       - traefik.http.services.jellyfin.loadbalancer.server.port=8096
 
 volumes:
