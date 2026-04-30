@@ -196,19 +196,21 @@ services:
     image: lscr.io/linuxserver/bazarr:latest
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - lidarr:/config
+      - bazarr:/config
       - ${ROOT_DIR}:/data
     labels:
       - traefik.enable=true
-      - traefik.http.routers.lidarr.rule=Host(`lidarr.home.arpa`)
-      - traefik.http.routers.lidarr.entrypoints=websecure
-      - traefik.http.routers.lidarr.tls=true
-      - traefik.http.services.lidarr.loadbalancer.server.port=8686
+      - traefik.http.routers.bazarr.rule=Host(`bazarr.home.arpa`)
+      - traefik.http.routers.bazarr.entrypoints=websecure
+      - traefik.http.routers.bazarr.tls=true
+      - traefik.http.services.bazarr.loadbalancer.server.port=6767
 
 volumes:
   radarr:
   sonarr:
   prowlarr:
+  lidarr:
+  bazarr:
   jellyfin:
 
 networks:
