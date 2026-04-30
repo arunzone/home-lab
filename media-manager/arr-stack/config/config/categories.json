@@ -10,5 +10,8 @@
     },
     "tv": {
         "save_path": "tv"
+    },
+    "prowlarr": {
+        "save_path": ""
     }
 }
