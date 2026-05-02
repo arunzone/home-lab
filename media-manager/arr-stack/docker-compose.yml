@@ -107,6 +107,7 @@ services:
       - jellyfin:/config
       - ${ROOT_DIR}/media/tv:/data/tvshows
       - ${ROOT_DIR}/media/movies:/data/movies
+      - ${ROOT_DIR}/media/musicvideos:/data/musicvideos
     ports:
       - 7359:7359/udp
       - "8096:8096"
