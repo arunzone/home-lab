@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+# Create media group
+groupadd -g 1000 media
+useradd -u 1000 -g 1000 -m media
+
 # Setup SSL certificates
 mkdir -p traefik/certs
 if [ ! -f "traefik/certs/local.crt" ]; then
@@ -35,6 +39,16 @@ if grep -q "^TRAEFIK_BASIC_AUTH=" .env; then
 else
     echo "Adding TRAEFIK_BASIC_AUTH to .env..."
     echo "TRAEFIK_BASIC_AUTH=$TRAEFIK_AUTH" >> .env
+fi
+
+# Find the current docker group ID
+CURRENT_GID=$(getent group docker | cut -d: -f3)
+
+# Update or append the DOCKER_GID in the .env file
+if grep -q "DOCKER_GID=" .env; then
+    sed -i "s/DOCKER_GID=.*/DOCKER_GID=$CURRENT_GID/" .env
+else
+    echo "DOCKER_GID=$CURRENT_GID" >> .env
 fi
 
 echo "Setup completed!"
