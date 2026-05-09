@@ -88,7 +88,7 @@ services:
       - NET_ADMIN
     volumes:
       - ./config:/config
-      - ${ROOT_DIR}/torrents:/data:rw
+      - ${ROOT_DIR}:/data:rw
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
     labels:
