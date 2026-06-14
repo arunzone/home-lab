@@ -192,6 +192,27 @@ services:
       - traefik.http.routers.lidarr.tls=true
       - traefik.http.services.lidarr.loadbalancer.server.port=8686
 
+  readmeabook:
+    <<: *common-keys
+    image: ghcr.io/kikootwo/readmeabook:latest
+    container_name: readmeabook
+    environment:
+      PUBLIC_URL: "https://readmeabook.home.arpa"
+    volumes:
+     - /etc/localtime:/etc/localtime:ro
+     - readmeabook:/app/config
+     - ${ROOT_DIR}/media/books:/downloads
+     - ${BOOK_DIR}/media:/media
+     - ${BOOK_DIR}/cache:/app/cache
+     - ${BOOK_DIR}/pgdata:/var/lib/postgresql/data
+     - ${BOOK_DIR}/redis:/var/lib/redis
+    labels:
+     - traefik.enable=true
+     - traefik.http.routers.readmeabook.rule=Host(`readmeabook.home.arpa`)
+     - traefik.http.routers.readmeabook.entrypoints=websecure
+     - traefik.http.routers.readmeabook.tls=true
+     - traefik.http.services.readmeabook.loadbalancer.server.port=3030
+
   bazarr:
     <<: *common-keys
     container_name: bazarr
@@ -214,6 +235,7 @@ volumes:
   lidarr:
   bazarr:
   jellyfin:
+  readmeabook:
 
 networks:
   arr_network:
