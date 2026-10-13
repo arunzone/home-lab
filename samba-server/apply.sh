@@ -8,6 +8,7 @@
 # Runs on the Proxmox host. Run from any other machine, it ships itself over
 # SSH to $PVE_HOST (default: the "lab" alias) and runs there.
 # Creating the container from scratch needs LXC_PASSWORD (root password) in the env.
+# Creating a Samba account needs SMB_PASSWORD in the env. Neither is ever written to git.
 set -euo pipefail
 
 MODE=apply
@@ -27,6 +28,7 @@ if ! command -v pct >/dev/null 2>&1; then
   cp "$DIR/apply.sh" "$DIR/container.env" "$stage/"
   if [ -f "$DIR/smb.conf" ]; then cp "$DIR/smb.conf" "$stage/"; fi
   if [ -n "${LXC_PASSWORD:-}" ]; then (umask 077; printf '%s' "$LXC_PASSWORD" > "$stage/.lxc_password"); fi
+  if [ -n "${SMB_PASSWORD:-}" ]; then (umask 077; printf '%s' "$SMB_PASSWORD" > "$stage/.smb_password"); fi
   echo ">> $MODE on $PVE_HOST"
   # shellcheck disable=SC2029 # $1 is validated above (empty or --check)
   COPYFILE_DISABLE=1 tar -C "$stage" -cf - . | ssh "$PVE_HOST" \
@@ -38,6 +40,7 @@ fi
 # shellcheck source=container.env
 source "$DIR/container.env"
 if [ -f "$DIR/.lxc_password" ]; then LXC_PASSWORD="$(cat "$DIR/.lxc_password")"; fi
+if [ -f "$DIR/.smb_password" ]; then SMB_PASSWORD="$(cat "$DIR/.smb_password")"; fi
 
 DRIFT=0
 NEEDS_RESTART=0
@@ -116,6 +119,53 @@ else
     say FIXED "samba installed"
   fi
 fi
+
+# 4b. Users -----------------------------------------------------------------------------
+field() { cut -d: -f"$1" <<<"$2"; }
+
+ent="$(in_ct "getent group $MEDIA_USER" 2>/dev/null || true)"
+if [ -z "$ent" ]; then
+  say DRIFT "group $MEDIA_USER missing -> create (gid $MEDIA_GID)"
+  DRIFT=1
+  if apply; then in_ct "groupadd -g $MEDIA_GID $MEDIA_USER"; say FIXED "group $MEDIA_USER"; fi
+elif [ "$(field 3 "$ent")" != "$MEDIA_GID" ]; then
+  say DRIFT "group $MEDIA_USER gid is $(field 3 "$ent"), declared $MEDIA_GID (manual fix: re-owns files on /mnt/media)"
+  DRIFT=1; FAILED=1
+else
+  say OK "group $MEDIA_USER ($MEDIA_GID)"
+fi
+
+ent="$(in_ct "getent passwd $MEDIA_USER" 2>/dev/null || true)"
+if [ -z "$ent" ]; then
+  say DRIFT "user $MEDIA_USER missing -> create (uid $MEDIA_UID)"
+  DRIFT=1
+  if apply; then
+    in_ct "useradd -u $MEDIA_UID -g $MEDIA_GID -M -d /nonexistent -s /usr/sbin/nologin $MEDIA_USER"
+    say FIXED "user $MEDIA_USER"
+  fi
+elif [ "$(field 3 "$ent"):$(field 4 "$ent")" != "$MEDIA_UID:$MEDIA_GID" ]; then
+  say DRIFT "user $MEDIA_USER is $(field 3 "$ent"):$(field 4 "$ent"), declared $MEDIA_UID:$MEDIA_GID (manual fix: re-owns files on /mnt/media)"
+  DRIFT=1; FAILED=1
+else
+  say OK "user $MEDIA_USER ($MEDIA_UID:$MEDIA_GID)"
+fi
+
+SMB_LIVE="$(in_ct 'pdbedit -L 2>/dev/null' | cut -d: -f1 | paste -sd' ' - || true)"
+say INFO "samba accounts in container: ${SMB_LIVE:-<none>}"
+for u in $SMB_USERS; do
+  case " $SMB_LIVE " in
+    *" $u "*) say OK "samba account $u" ;;
+    *)
+      say DRIFT "samba account $u missing -> create"
+      DRIFT=1
+      if apply; then
+        in_ct "id -u $u" >/dev/null 2>&1 || die "unix user $u does not exist in the container"
+        [ -n "${SMB_PASSWORD:-}" ] || die "SMB_PASSWORD must be set to create samba account $u"
+        printf '%s\n%s\n' "$SMB_PASSWORD" "$SMB_PASSWORD" | pct exec "$CTID" -- smbpasswd -s -a "$u" >/dev/null
+        say FIXED "samba account $u"
+      fi ;;
+  esac
+done
 
 if [ -f "$DIR/smb.conf" ]; then
   if [ "$(in_ct 'cat /etc/samba/smb.conf' 2>/dev/null || true)" = "$(cat "$DIR/smb.conf")" ]; then
